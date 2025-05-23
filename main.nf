@@ -156,7 +156,7 @@ process arcasHLA {
     find $baesDir/ALIGN2 -type d -mindepth 1 | while read sampleDir; do 
         sampleName=\$(basename "\$sampleDir");
         arcasHLA extract $baseDir/ALIGN2/\$sampleName/*.bam;
-        arcasHLA genotype *.fq.gz
+        arcasHLA genotype *.fq.gz;
         mkdir "\$sampleName"; mv ./* "\$sampleName"
         done;
 
