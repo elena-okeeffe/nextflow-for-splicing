@@ -100,7 +100,7 @@ process genomeGenerate2 {
      */
     script:
     """
-    STAR --runMode genomeGenerate --runThreadN 14 --genomeDir step2_Genome --genomeFastaFiles $fasta --sjdbGTFfile $gtf --sjdbFileChrStartEnd $baseDir/ALIGN1/*/SJ.out;
+    STAR --runMode genomeGenerate --runThreadN 14 --genomeDir step2_Genome --genomeFastaFiles $fasta --sjdbGTFfile $gtf --sjdbFileChrStartEnd $baseDir/ALIGN1/*/SJ.out.tab;
     """
 
 }
@@ -156,7 +156,7 @@ process arcasHLA {
     find $baesDir/ALIGN2 -type d -mindepth 1 | while read sampleDir; do 
         sampleName=\$(basename "\$sampleDir");
         arcasHLA extract $baseDir/ALIGN2/\$sampleName/*.bam;
-        arcasHLA genotype *.fq.gz;
+        arcasHLA genotype *.fq.gz
         mkdir "\$sampleName"; mv ./* "\$sampleName"
         done;
 
