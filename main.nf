@@ -13,9 +13,9 @@ fastq_channel = Channel.fromPath( params.fastq, checkIfExists: true)
 workflow {
     genomeGenerate1(fasta_channel, gtf_channel).view()
     alignPass1(fastq_channel, genomeGenerate1.out).view()
-    genomeGenerate2(fasta_channel, gtf_channel, alignPass1.out).view()
-    alignPass2(fastq_channel, genomeGenerate2.out).view()
-    arcasHLA(alignPass2.out).view()
+    genomeGenerate2(fasta_channel, gtf_channel, alignPass1.out)
+    alignPass2(fastq_channel, genomeGenerate2.out)
+    arcasHLA(alignPass2.out)
 }
 
 
@@ -35,6 +35,7 @@ process genomeGenerate1 {
     path gtf
 
     output:
+    path "*"
     val true
 
     script:
@@ -57,9 +58,11 @@ process alignPass1 {
     
     input:
     path fastqs
+    path prev
     val ready
 
     output:
+    path "*"
     val true
 
     script:
@@ -67,7 +70,7 @@ process alignPass1 {
     find $baseDir/samples -type d -mindepth 1 | while read sampleDir; do 
         sampleName=\$(basename "\$sampleDir");
         STAR --runMode alignReads --runThreadN 14 --genomeDir $baseDir/STEP1GENOME/step1_Genome --readFilesIn "\$sampleDir"/*.fastq;
-        mkdir "\$sampleName"; mv ./* "\$sampleName"
+        mkdir "\$sampleName"; mv ./*.* "\$sampleName"
         done;
     """
 
@@ -88,9 +91,11 @@ process genomeGenerate2 {
     input:
     path fasta
     path gtf
+    path prev
     val ready
 
     output:
+    path "*"
     val true
 
     /*
@@ -118,9 +123,11 @@ process alignPass2 {
     
     input:
     path fastqs
+    path prev
     val ready
 
     output:
+    path "*"
     val true
 
     script:
@@ -128,7 +135,7 @@ process alignPass2 {
     find $baesDir/samples -type d -mindepth 1 | while read sampleDir; do 
         sampleName=\$(basename "\$sampleDir");
         STAR --runMode alignReads --runThreadN 14 --genomeDir $baseDir/STEP2GENOME/step2_Genome --readFilesIn "\$sampleDir"/*.fastq;
-        mkdir "\$sampleName"; mv ./* "\$sampleName"
+        mkdir "\$sampleName"; mv ./*.* "\$sampleName"
         done;
     """
 
@@ -146,18 +153,20 @@ process arcasHLA {
     publishDir "HLATypes", mode: 'copy'
     
     input:
+    path prev
     val ready
 
     output:
+    path "*"
     val true
 
     script:
     """
     find $baesDir/ALIGN2 -type d -mindepth 1 | while read sampleDir; do 
         sampleName=\$(basename "\$sampleDir");
-        arcasHLA extract $baseDir/ALIGN2/\$sampleName/*.bam;
+        arcasHLA extract \$sampleDir/*.bam;
         arcasHLA genotype *.fq.gz
-        mkdir "\$sampleName"; mv ./* "\$sampleName"
+        mkdir "\$sampleName_hla"; mv ./*.* "\$sampleName_hla"
         done;
 
     """
