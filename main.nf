@@ -15,6 +15,7 @@ workflow {
     alignPass1(fastq_channel, genomeGenerate1.out).view()
     genomeGenerate2(fasta_channel, gtf_channel, alignPass1.out).view()
     alignPass2(fastq_channel, genomeGenerate2.out).view()
+    arcasHLA(alignPass2.out).view()
 }
 
 
@@ -131,4 +132,33 @@ process alignPass2 {
         done;
     """
 
+}
+
+process arcasHLA {
+    /*
+     * This conda environment is used with the "waveDynamic" profile to dynamically
+     *  fetch a singularity OCI-SIF container with the dependencies in this xml.
+     * By defauly this is ignored and the static container specified in the
+     *  "standard" profile is used.
+     */
+    conda 'conda/env.yml'
+
+    publishDir "HLATypes", mode: 'copy'
+    
+    input:
+    val ready
+
+    output:
+    val true
+
+    script:
+    """
+    find $baesDir/ALIGN2 -type d -mindepth 1 | while read sampleDir; do 
+        sampleName=\$(basename "\$sampleDir");
+        arcasHLA extract $baseDir/ALIGN2/\$sampleName/*.bam;
+        arcasHLA genotype *.fq.gz
+        mkdir "\$sampleName"; mv ./* "\$sampleName"
+        done;
+
+    """
 }
