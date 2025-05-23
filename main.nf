@@ -34,7 +34,7 @@ process genomeGenerate1 {
     path gtf
 
     output:
-    path '*', emit:  genome1_channel
+    val true
 
     script:
     """
@@ -56,14 +56,14 @@ process alignPass1 {
     
     input:
     path fastqs
-    path genome1_channel
+    val ready
 
     output:
-    path "*", emit: align1_channel
+    val true
 
     script:
     """
-    find $fastqs -type d -mindepth 1 | while read sampleDir; do 
+    find $baseDir/samples -type d -mindepth 1 | while read sampleDir; do 
         sampleName=\$(basename "\$sampleDir");
         STAR --runMode alignReads --runThreadN 14 --genomeDir $baseDir/STEP1GENOME/step1_Genome --readFilesIn "\$sampleDir"/*.fastq;
         mkdir "\$sampleName"; mv ./* "\$sampleName"
@@ -87,10 +87,10 @@ process genomeGenerate2 {
     input:
     path fasta
     path gtf
-    path align1_channel
+    val ready
 
     output:
-    path "*", emit: genome2_channel
+    val true
 
     /*
      * This step performs a second alignment and passes all SJ.out files for all samples 
@@ -117,14 +117,14 @@ process alignPass2 {
     
     input:
     path fastqs
-    path genome2_channel
+    val ready
 
     output:
-    path "*"
+    val true
 
     script:
     """
-    find $fastqs -type d -mindepth 1 | while read sampleDir; do 
+    find $baesDir/samples -type d -mindepth 1 | while read sampleDir; do 
         sampleName=\$(basename "\$sampleDir");
         STAR --runMode alignReads --runThreadN 14 --genomeDir $baseDir/STEP2GENOME/step2_Genome --readFilesIn "\$sampleDir"/*.fastq;
         mkdir "\$sampleName"; mv ./* "\$sampleName"
